@@ -6,13 +6,12 @@
 #define DEFAULT_SERVO_US 1500
 #define SERVO_MIN_US 1000
 #define SERVO_MAX_US 2000
+#define PCA9685_ADDR 0x40
 // Arduino Pins
 #define OE_PIN 7    // Output Enable
 #define LED_PIN 13  // Safety indicator LED
 
-// Safety Timeout
-#define FRONTEND_TIMEOUT_MS 1000  // Timeout in milliseconds
-#define PCA9685_ADDR 0x40
-
+// Safety Timeout (milliseconds)
+#define FRONTEND_TIMEOUT_MS 1000
 
 #endif

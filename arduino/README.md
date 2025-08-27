@@ -16,3 +16,4 @@
 3. Upload to Arduino Uno.
 4. Outputs are initially disabled. Use Flask frontend to enable.
 5. Safety feature: If frontend disconnects >1s, outputs are disabled and enabled servos reset.
+6. All servos move to default before enabling.

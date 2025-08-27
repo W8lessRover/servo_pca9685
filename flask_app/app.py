@@ -3,7 +3,7 @@ import serial
 import threading
 import time
 
-SERIAL_PORT = '/dev/ttyACM1'
+SERIAL_PORT = '/dev/ttyACM0'
 ser = serial.Serial(SERIAL_PORT, 115200, timeout=0.1)
 
 app = Flask(__name__)
