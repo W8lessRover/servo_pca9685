@@ -1,9 +1,11 @@
 let axisMapping = {};  // { servoIndex: axisIndex }
 
+// Fetch servo values and update UI
 async function fetchValues() {
   let res = await fetch('/get_values');
   let data = await res.json();
 
+  // Update Output Enable button
   let button = document.getElementById('outputButton');
   if (data.enabled) {
     button.textContent = "Enabled";
@@ -13,13 +15,14 @@ async function fetchValues() {
     button.className = "button disabled";
   }
 
+  // Update servo sliders
   let slidersDiv = document.getElementById('sliders');
   slidersDiv.innerHTML = "";
   data.values.forEach((val, idx) => {
     let container = document.createElement("div");
     container.className = "servo-control";
     container.innerHTML = `
-      <label>Servo ${idx}:</label> 
+      <span class="servo-label">Servo ${idx}:</span>
       <input type="range" min="1000" max="2000" value="${val}" 
         oninput="updateServo(${idx}, this.value)">
       <span id="val${idx}">${val}</span>
@@ -35,6 +38,7 @@ async function fetchValues() {
   });
 }
 
+// Update a single servo
 async function updateServo(ch, val) {
   document.getElementById(`val${ch}`).textContent = val;
   await fetch('/set_servo', {
@@ -44,6 +48,39 @@ async function updateServo(ch, val) {
   });
 }
 
+// Update all servos via SETALL
+async function setAllServos(val) {
+  for (let i = 0; i < 16; i++) {
+    document.getElementById(`val${i}`)?.textContent = val;
+    let slider = document.querySelector(`input[type=range][oninput*="${i}"]`);
+    if (slider) slider.value = val;
+  }
+  document.getElementById("allServosSlider").value = val;
+  document.getElementById("allServosVal").textContent = val;
+
+  await fetch('/set_all', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value: val })
+  });
+}
+
+// Handle the All Servos slider
+async function updateAllServos(val) {
+  document.getElementById("allServosVal").textContent = val;
+  for (let i = 0; i < 16; i++) {
+    document.getElementById(`val${i}`)?.textContent = val;
+    let slider = document.querySelector(`input[type=range][oninput*="${i}"]`);
+    if (slider) slider.value = val;
+  }
+  await fetch('/set_all', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value: val })
+  });
+}
+
+// Map joystick axes to servos
 function mapAxis(servo, axis) {
   if (axis === "") {
     delete axisMapping[servo];
@@ -52,12 +89,6 @@ function mapAxis(servo, axis) {
   }
 }
 
-// Toggle output button
-document.getElementById("outputButton").onclick = async () => {
-  await fetch('/toggle_output', { method: 'POST' });
-  fetchValues();
-};
-
 // Poll joystick
 function pollGamepads() {
   let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -65,22 +96,25 @@ function pollGamepads() {
 
   for (let servo in axisMapping) {
     let axis = axisMapping[servo];
-    let gp = gamepads[0]; // use first gamepad
+    let gp = gamepads[0];
     if (gp && gp.axes.length > axis) {
       let val = gp.axes[axis]; // -1 to 1
-      // Map joystick value (-1..1) to servo range (1000..2000)
       let us = 1500 + val * 500;
       updateServo(parseInt(servo), Math.round(us));
-      document.querySelector(`#val${servo}`).textContent = Math.round(us);
-      document.querySelector(`input[type=range][oninput*="${servo}"]`).value = Math.round(us);
     }
   }
   requestAnimationFrame(pollGamepads);
 }
 
+// Output Enable button
+document.getElementById("outputButton").onclick = async () => {
+  await fetch('/toggle_output', { method: 'POST' });
+  fetchValues();
+};
+
+// Start polling and value refresh
+setInterval(fetchValues, 500);
 window.addEventListener("gamepadconnected", function(e) {
   console.log("Gamepad connected:", e.gamepad.id);
   pollGamepads();
 });
-
-setInterval(fetchValues, 1000);

@@ -4,16 +4,18 @@ import threading
 
 app = Flask(__name__)
 
-# Default serial port (adjust if needed)
-SERIAL_PORT = "/dev/ttyAMA0"
+# Serial port configuration
+SERIAL_PORT = "/dev/ttyACM0"  # adjust to /dev/ttyUSB0 if needed
 BAUD_RATE = 115200
 
 # Open serial connection
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
 
-servo_values = [1500] * 16
+NUM_SERVOS = 16
+servo_values = [1500] * NUM_SERVOS
 output_enabled = False
 
+# Thread to read serial feedback from Arduino
 def read_serial():
     global servo_values
     while True:
@@ -24,7 +26,8 @@ def read_serial():
                     _, ch, val = line.split()
                     servo_values[int(ch)] = int(val)
                 except ValueError:
-                    pass  # ignore malformed lines
+                    pass
+            # ACK/ENABLE/DISABLE lines ignored here
 
 threading.Thread(target=read_serial, daemon=True).start()
 
@@ -37,6 +40,12 @@ def set_servo():
     ch = int(request.json['channel'])
     val = int(request.json['value'])
     ser.write(f"SET {ch} {val}\n".encode())
+    return jsonify(success=True)
+
+@app.route('/set_all', methods=['POST'])
+def set_all():
+    val = int(request.json['value'])
+    ser.write(f"SETALL {val}\n".encode())
     return jsonify(success=True)
 
 @app.route('/toggle_output', methods=['POST'])
