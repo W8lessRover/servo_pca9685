@@ -3,7 +3,7 @@
 
 ServoController::ServoController() {
     for (int i = 0; i < NUM_SERVOS; i++) {
-        servoValues[i] = SERVO_DEFAULT_US;
+        servoValues[i] = DEFAULT_SERVO_US;
     }
 }
 
@@ -68,13 +68,13 @@ void ServoController::setServo(int channel, int microseconds) {
 }
 
 int ServoController::getServoValue(int channel) {
-    if (channel < 0 || channel >= NUM_SERVOS) return SERVO_DEFAULT_US;
+    if (channel < 0 || channel >= NUM_SERVOS) return DEFAULT_SERVO_US;
     return servoValues[channel];
 }
 
 void ServoController::setAllDefault() {
     for (int i = 0; i < NUM_SERVOS; i++) {
-        setServo(i, SERVO_DEFAULT_US);
+        setServo(i, DEFAULT_SERVO_US);
     }
 }
 

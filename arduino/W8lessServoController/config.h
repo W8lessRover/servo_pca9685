@@ -1,14 +1,18 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define PCA9685_ADDR 0x40  // I2C address
-
-#define OE_PIN 7           // Output Enable (active low)
-
+// PCA9685 Settings
+#define NUM_SERVOS 16
+#define DEFAULT_SERVO_US 1500
 #define SERVO_MIN_US 1000
 #define SERVO_MAX_US 2000
-#define SERVO_DEFAULT_US 1500
+// Arduino Pins
+#define OE_PIN 7    // Output Enable
+#define LED_PIN 13  // Safety indicator LED
 
-#define NUM_SERVOS 16
+// Safety Timeout
+#define FRONTEND_TIMEOUT_MS 1000  // Timeout in milliseconds
+#define PCA9685_ADDR 0x40
+
 
 #endif
