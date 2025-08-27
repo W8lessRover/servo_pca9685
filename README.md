@@ -125,11 +125,3 @@ http://localhost:5666
 
 This project is provided as-is for educational and personal use.
 
-```
-
----
-
-This is ready to **copy and paste directly** into `servo_pca9685/README.md`.  
-
-Do you want me to also create the **`arduino/README.md`** now so each subfolder has its own guide?
-```
