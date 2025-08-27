@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Servo Controller</title>
-  <script src="/static/script.js"></script>
   <style>
     body { font-family: Arial, sans-serif; }
     .button { border-radius: 50%; width: 100px; height: 100px; font-size: 18px; color: white; border: none; margin: 10px; }
@@ -16,24 +15,30 @@
 <body>
   <h1>Servo Controller</h1>
 
-  <!-- Output Enable -->
-  <button id="outputButton" class="button disabled">Disabled</button>
+  <!-- Separate Enable/Disable Buttons -->
+  <div class="group-controls">
+    <button id="enableButton" class="button enabled">Enable</button>
+    <button id="disableButton" class="button disabled">Disable</button>
+  </div>
 
   <!-- Quick Group Controls -->
   <div class="group-controls">
-    <button onclick="setAllServos(1000)">All Min</button>
-    <button onclick="setAllServos(1500)">All Mid</button>
-    <button onclick="setAllServos(2000)">All Max</button>
+    <button id="allMinBtn">All Min</button>
+    <button id="allMidBtn">All Mid</button>
+    <button id="allMaxBtn">All Max</button>
   </div>
 
   <!-- All Servos Slider -->
   <div class="group-controls">
     <label>All Servos:</label>
-    <input type="range" min="1000" max="2000" value="1500" id="allServosSlider" oninput="updateAllServos(this.value)">
+    <input type="range" min="1000" max="2000" value="1500" id="allServosSlider">
     <span id="allServosVal">1500</span>
   </div>
 
   <!-- Individual Servo Sliders -->
   <div id="sliders"></div>
+
+  <!-- Load JS at the end -->
+  <script src="/static/script.js"></script>
 </body>
 </html>

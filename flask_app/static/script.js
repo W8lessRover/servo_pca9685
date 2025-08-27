@@ -1,32 +1,20 @@
 let axisMapping = {};  // { servoIndex: axisIndex }
 
-// Fetch servo values and update UI
-async function fetchValues() {
-  let res = await fetch('/get_values');
-  let data = await res.json();
-
-  // Update Output Enable button
-  let button = document.getElementById('outputButton');
-  if (data.enabled) {
-    button.textContent = "Enabled";
-    button.className = "button enabled";
-  } else {
-    button.textContent = "Disabled";
-    button.className = "button disabled";
-  }
-
-  // Update servo sliders
+// -------------------------------
+// Create sliders once
+// -------------------------------
+function createSliders(numServos) {
   let slidersDiv = document.getElementById('sliders');
   slidersDiv.innerHTML = "";
-  data.values.forEach((val, idx) => {
+
+  for (let idx = 0; idx < numServos; idx++) {
     let container = document.createElement("div");
     container.className = "servo-control";
     container.innerHTML = `
       <span class="servo-label">Servo ${idx}:</span>
-      <input type="range" min="1000" max="2000" value="${val}" 
-        oninput="updateServo(${idx}, this.value)">
-      <span id="val${idx}">${val}</span>
-      <select onchange="mapAxis(${idx}, this.value)">
+      <input type="range" min="1000" max="2000" value="1500" id="slider${idx}">
+      <span id="val${idx}">1500</span>
+      <select id="axis${idx}">
         <option value="">-- No Axis --</option>
         <option value="0">Axis 0</option>
         <option value="1">Axis 1</option>
@@ -35,10 +23,44 @@ async function fetchValues() {
       </select>
     `;
     slidersDiv.appendChild(container);
-  });
+
+    // Attach slider input handler
+    document.getElementById(`slider${idx}`).addEventListener("input", function() {
+      updateServo(idx, this.value);
+    });
+
+    // Attach axis mapping handler
+    document.getElementById(`axis${idx}`).addEventListener("change", function() {
+      mapAxis(idx, this.value);
+    });
+  }
 }
 
+// -------------------------------
+// Fetch servo values and update sliders
+// -------------------------------
+async function fetchValues() {
+  let res = await fetch('/get_values');
+  let data = await res.json();
+
+  data.values.forEach((val, idx) => {
+    let slider = document.getElementById(`slider${idx}`);
+    let valSpan = document.getElementById(`val${idx}`);
+    if (slider && valSpan) {
+      slider.value = val;
+      valSpan.textContent = val;
+    }
+  });
+
+  // Update All Servos slider to average value
+  let avgVal = Math.round(data.values.reduce((a,b) => a+b)/data.values.length);
+  document.getElementById("allServosSlider").value = avgVal;
+  document.getElementById("allServosVal").textContent = avgVal;
+}
+
+// -------------------------------
 // Update a single servo
+// -------------------------------
 async function updateServo(ch, val) {
   document.getElementById(`val${ch}`).textContent = val;
   await fetch('/set_servo', {
@@ -48,13 +70,19 @@ async function updateServo(ch, val) {
   });
 }
 
-// Update all servos via SETALL
-async function setAllServos(val) {
+// -------------------------------
+// Update all servos
+// -------------------------------
+async function updateAllServos(val) {
   for (let i = 0; i < 16; i++) {
-    document.getElementById(`val${i}`)?.textContent = val;
-    let slider = document.querySelector(`input[type=range][oninput*="${i}"]`);
-    if (slider) slider.value = val;
+    let slider = document.getElementById(`slider${i}`);
+    let valSpan = document.getElementById(`val${i}`);
+    if (slider && valSpan) {
+      slider.value = val;
+      valSpan.textContent = val;
+    }
   }
+
   document.getElementById("allServosSlider").value = val;
   document.getElementById("allServosVal").textContent = val;
 
@@ -65,22 +93,9 @@ async function setAllServos(val) {
   });
 }
 
-// Handle the All Servos slider
-async function updateAllServos(val) {
-  document.getElementById("allServosVal").textContent = val;
-  for (let i = 0; i < 16; i++) {
-    document.getElementById(`val${i}`)?.textContent = val;
-    let slider = document.querySelector(`input[type=range][oninput*="${i}"]`);
-    if (slider) slider.value = val;
-  }
-  await fetch('/set_all', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ value: val })
-  });
-}
-
+// -------------------------------
 // Map joystick axes to servos
+// -------------------------------
 function mapAxis(servo, axis) {
   if (axis === "") {
     delete axisMapping[servo];
@@ -89,7 +104,9 @@ function mapAxis(servo, axis) {
   }
 }
 
+// -------------------------------
 // Poll joystick
+// -------------------------------
 function pollGamepads() {
   let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
   if (!gamepads) return;
@@ -106,14 +123,42 @@ function pollGamepads() {
   requestAnimationFrame(pollGamepads);
 }
 
-// Output Enable button
-document.getElementById("outputButton").onclick = async () => {
-  await fetch('/toggle_output', { method: 'POST' });
-  fetchValues();
-};
+// -------------------------------
+// Enable / Disable Buttons
+// -------------------------------
+document.getElementById("enableButton").addEventListener("click", async () => {
+  await fetch('/enable_output', { method: 'POST' });
+  updateOutputButtons(true);
+});
 
-// Start polling and value refresh
-setInterval(fetchValues, 500);
+document.getElementById("disableButton").addEventListener("click", async () => {
+  await fetch('/disable_output', { method: 'POST' });
+  updateOutputButtons(false);
+});
+
+function updateOutputButtons(enabled) {
+  document.getElementById("enableButton").className = enabled ? "button enabled" : "button disabled";
+  document.getElementById("disableButton").className = enabled ? "button disabled" : "button enabled";
+}
+
+// -------------------------------
+// All Min/Mid/Max Buttons
+// -------------------------------
+document.getElementById("allMinBtn").addEventListener("click", () => updateAllServos(1000));
+document.getElementById("allMidBtn").addEventListener("click", () => updateAllServos(1500));
+document.getElementById("allMaxBtn").addEventListener("click", () => updateAllServos(2000));
+
+// All Servos slider
+document.getElementById("allServosSlider").addEventListener("input", function() {
+  updateAllServos(this.value);
+});
+
+// -------------------------------
+// Initialize
+// -------------------------------
+createSliders(16);            // create all servo sliders once
+setInterval(fetchValues, 500); // update values every 500ms
+
 window.addEventListener("gamepadconnected", function(e) {
   console.log("Gamepad connected:", e.gamepad.id);
   pollGamepads();
