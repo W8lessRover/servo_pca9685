@@ -10,7 +10,6 @@ void setup() {
 }
 
 void loop() {
-    // Listen for commands from Flask (via serial/USB)
     if (Serial.available()) {
         String cmd = Serial.readStringUntil('\n');
         cmd.trim();

@@ -1,22 +1,23 @@
-#ifndef SERVO_CONTROLLER_H
-#define SERVO_CONTROLLER_H
+#ifndef SERVOCONTROLLER_H
+#define SERVOCONTROLLER_H
 
 #include <Wire.h>
+#include <Arduino.h>
 #include "config.h"
 
 class ServoController {
-public:
+  public:
     ServoController();
     void begin();
-    void setServo(uint8_t channel, uint16_t microseconds);
+    void setServo(int channel, int microseconds);
+    int getServoValue(int channel);
     void setAllDefault();
     void enableOutputs(bool enable);
-    uint16_t getServoValue(uint8_t channel);
 
-private:
+  private:
     uint16_t servoValues[NUM_SERVOS];
-    void setPWM(uint8_t channel, uint16_t on, uint16_t off);
     uint16_t usToTicks(uint16_t microseconds);
+    void setPWM(int channel, uint16_t on, uint16_t off);
 };
 
 #endif
