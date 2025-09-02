@@ -1,7 +1,3 @@
-Absolutely! Here’s the **root `README.md`** in a **ready-to-copy format**:
-
----
-
 ```markdown
 # Servo PCA9685 Project
 
